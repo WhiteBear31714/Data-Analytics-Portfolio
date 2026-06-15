@@ -1,0 +1,1271 @@
+<!DOCTYPE html>
+<html lang="th" class="h-full bg-[#0F1115]">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>9Expert x Amazon Sales Intelligence Dashboard</title>
+    <!-- Tailwind CSS with custom Amazon Branding Config -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter & Kanit for modern Thai corporate legibility -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chart.js for visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- SheetJS for processing Excel (.xlsx, .xls) -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <!-- Marked.js for AI content compilation -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Kanit', 'Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        amazon: {
+                            DEFAULT: '#FF9900',
+                            orange: '#FF9900',
+                            orangeHover: '#DF8600',
+                            ink: '#131921',
+                            squid: '#1B222D',
+                            prime: '#00A8E1',
+                            gold: '#F2C200',
+                            charcoal: '#232F3E'
+                        }
+                    },
+                    boxShadow: {
+                        'neon-orange': '0 0 15px rgba(255, 153, 0, 0.15)',
+                        'neon-prime': '0 0 15px rgba(0, 168, 225, 0.15)',
+                        'glow': '0 4px 20px rgba(0, 0, 0, 0.4)'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom scrollbar optimized for dark mode */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #131921;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #37475A;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #FF9900;
+        }
+        .chart-container {
+            position: relative;
+            margin: auto;
+            height: 250px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body class="h-full text-slate-100 flex flex-col font-sans selection:bg-[#FF9900] selection:text-black">
+
+    <header class="border-b border-[#37475A] bg-[#131921] sticky top-0 z-30 shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="bg-gradient-to-br from-amazon-orange to-amazon-gold p-2 rounded-xl text-black shadow-neon-orange">
+                    <i data-lucide="shopping-cart" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <div class="flex items-center space-x-2">
+                        <span class="text-xs font-bold tracking-widest bg-amazon-orange text-black px-1.5 py-0.5 rounded uppercase">AMAZON SELLER</span>
+                        <h1 class="text-lg font-bold bg-gradient-to-r from-white via-slate-100 to-amazon-orange bg-clip-text text-transparent">
+                            Brand Analytics Hub
+                        </h1>
+                    </div>
+                    <p class="text-[11px] text-slate-400">ระบบประมวลข้อมูลและรายงานสรุปยอดขายอัจฉริยะ (Premium Edition)</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-3">
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-[#FF9900]/10 text-amazon-orange border border-[#FF9900]/20 animate-pulse">
+                    <span class="w-2 h-2 mr-1.5 rounded-full bg-amazon-orange"></span>
+                    วิเคราะห์ข้อมูลเรียลไทม์
+                </span>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <!-- Upload Box with Amazon Accent Border -->
+            <div class="lg:col-span-8 bg-[#1B222D] border-l-4 border-l-amazon-orange border border-slate-800 rounded-2xl p-6 relative overflow-hidden group shadow-glow">
+                <div class="absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-amazon-orange/5 to-transparent pointer-events-none"></div>
+                <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+                    <div class="space-y-2">
+                        <div class="flex items-center space-x-2">
+                            <span class="p-1.5 bg-[#FF9900]/10 rounded-lg text-amazon-orange">
+                                <i data-lucide="upload" class="w-4 h-4"></i>
+                            </span>
+                            <h2 class="text-lg font-bold text-white">อัปเดตฐานข้อมูลสินค้าและยอดขาย</h2>
+                        </div>
+                        <p class="text-xs text-slate-400 max-w-lg leading-relaxed">
+                            ลากและวาง หรือเลือกไฟล์ Excel Workbook <span class="text-amazon-orange font-semibold">(.xlsx, .xls)</span> หรือ <span class="text-amazon-orange font-semibold">.csv</span> เพื่ออัปเดต เช่น 
+                            <span class="underline decoration-amazon-orange/50 text-slate-300">Amazon_Sales_Dataset.csv.xlsx</span> หรือ <span class="underline decoration-amazon-prime/50 text-slate-300">9Expert Sales Demo-PivotTable.xlsx</span>
+                        </p>
+                    </div>
+                    
+                    <div class="w-full md:w-auto">
+                        <label class="flex flex-col items-center justify-center px-6 py-4 bg-[#232F3E] hover:bg-[#2D3C4F] border border-dashed border-slate-600 hover:border-amazon-orange rounded-xl cursor-pointer transition group">
+                            <div class="flex flex-col items-center justify-center space-y-1">
+                                <i data-lucide="file-spreadsheet" class="w-8 h-8 text-slate-400 group-hover:text-amazon-orange group-hover:scale-110 transition-transform"></i>
+                                <span class="text-xs font-semibold text-slate-200 group-hover:text-amazon-orange">เลือกไฟล์อัปโหลด</span>
+                                <span class="text-[10px] text-slate-500">สูงสุด 50MB</span>
+                            </div>
+                            <input type="file" id="fileInput" class="hidden" accept=".xlsx, .xls, .csv">
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- Active file label tracker -->
+                <div id="fileTracker" class="mt-4 hidden flex items-center justify-between bg-black/40 border border-[#FF9900]/30 px-4 py-2 rounded-xl text-xs text-amazon-orange">
+                    <div class="flex items-center gap-2">
+                        <i data-lucide="check-circle" class="w-4 h-4"></i>
+                        <span>ไฟล์ประมวลผลปัจจุบัน: <strong id="currentFileName">Amazon_Sales_Dataset.csv.xlsx</strong></span>
+                    </div>
+                    <button id="resetDemoBtn" class="text-slate-400 hover:text-white flex items-center gap-1 transition">
+                        <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> คืนค่าระบบตัวอย่าง
+                    </button>
+                </div>
+            </div>
+
+            <!-- AI Insight Activator Panel Quick Access -->
+            <div class="lg:col-span-4 bg-gradient-to-br from-[#1B222D] to-[#131921] border border-[#FF9900]/20 rounded-2xl p-6 flex flex-col justify-between shadow-glow relative overflow-hidden">
+                <div class="absolute -top-10 -right-10 w-32 h-32 bg-amazon-orange/10 rounded-full blur-2xl"></div>
+                <div>
+                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#FF9900]/20 text-amazon-orange border border-[#FF9900]/30 mb-3 uppercase tracking-wider">
+                        <i data-lucide="zap" class="w-3 h-3"></i> Prime Intelligence AI
+                    </span>
+                    <h3 class="text-base font-bold text-white">วิเคราะห์ผลลัพธ์ด้วย AI</h3>
+                    <p class="text-xs text-slate-400 mt-1 leading-relaxed">
+                        สังเคราะห์เทรนด์ยอดขาย พฤติกรรมผู้บริโภคระดับโลก และแนวโน้มสินค้าอัตโนมัติด้วยโมเดล Gemini 3.1 Flash
+                    </p>
+                </div>
+                <button id="triggerAiBtn" class="mt-4 w-full bg-gradient-to-r from-amazon-orange to-[#FFB74D] hover:from-amazon-orangeHover hover:to-amazon-orange text-black font-bold text-xs py-3 px-4 rounded-xl shadow-neon-orange transition-all flex items-center justify-center gap-2">
+                    <i data-lucide="cpu" class="w-4 h-4"></i> สรุปกลยุทธ์เชิงรุกด้วย AI Insights
+                </button>
+            </div>
+        </div>
+
+        <!-- Slicers Section -->
+        <div class="bg-[#1B222D] border border-slate-800 rounded-2xl p-5 shadow-glow">
+            <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-800">
+                <div class="flex items-center space-x-2 text-slate-300">
+                    <i data-lucide="sliders" class="w-4 h-4 text-amazon-orange"></i>
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-200">ตัวกรองสไลเซอร์อัจฉริยะ (Seller Slicers)</h3>
+                </div>
+                <button id="clearFiltersBtn" class="text-xs text-slate-400 hover:text-amazon-orange transition flex items-center gap-1">
+                    <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> ล้างตัวกรองทั้งหมด
+                </button>
+            </div>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <!-- Slicer 1: Region / Channel -->
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-400 mb-1.5 uppercase tracking-wide">ช่องทางการขาย / ภูมิภาค</label>
+                    <select id="regionFilter" class="w-full bg-[#232F3E] border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-amazon-orange transition">
+                        <option value="ALL">-- แสดงทั้งหมด --</option>
+                    </select>
+                </div>
+                <!-- Slicer 2: Salesperson / Brand -->
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-400 mb-1.5 uppercase tracking-wide">พนักงานขาย / แบรนด์ผู้จำหน่าย</label>
+                    <select id="salesFilter" class="w-full bg-[#232F3E] border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-amazon-orange transition">
+                        <option value="ALL">-- แสดงทั้งหมด --</option>
+                    </select>
+                </div>
+                <!-- Slicer 3: Category -->
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-400 mb-1.5 uppercase tracking-wide">หมวดหมู่ผลิตภัณฑ์</label>
+                    <select id="categoryFilter" class="w-full bg-[#232F3E] border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-amazon-orange transition">
+                        <option value="ALL">-- แสดงทั้งหมด --</option>
+                    </select>
+                </div>
+                <!-- Slicer 4: Search Product -->
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-400 mb-1.5 uppercase tracking-wide">ค้นหาชื่อสินค้าคีย์เวิร์ด</label>
+                    <div class="relative">
+                        <input type="text" id="searchInput" placeholder="พิมพ์ชื่อสินค้าหรือแบรนด์..." class="w-full bg-[#232F3E] border border-slate-700 rounded-xl pl-9 pr-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-amazon-orange transition">
+                        <i data-lucide="search" class="w-3.5 h-3.5 text-slate-500 absolute left-3 top-2.5"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- KPI Analytics Summary Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <!-- KPI 1 -->
+            <div class="bg-[#1B222D] border border-slate-800 rounded-2xl p-6 relative overflow-hidden shadow-glow border-t-2 border-t-amazon-orange">
+                <div class="absolute right-4 top-4 text-amazon-orange/10">
+                    <i data-lucide="dollar-sign" class="w-12 h-12"></i>
+                </div>
+                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wide">มูลค่ารวมยอดขาย (GMV)</p>
+                <h4 id="kpiTotalSales" class="text-2xl sm:text-3xl font-extrabold text-white mt-2">฿0.00</h4>
+                <div class="flex items-center gap-1.5 mt-2 text-[10px] text-amazon-orange">
+                    <i data-lucide="trending-up" class="w-3.5 h-3.5"></i>
+                    <span>วิเคราะห์ตามตลาด Amazon</span>
+                </div>
+            </div>
+            <!-- KPI 2 -->
+            <div class="bg-[#1B222D] border border-slate-800 rounded-2xl p-6 relative overflow-hidden shadow-glow border-t-2 border-t-amazon-prime">
+                <div class="absolute right-4 top-4 text-amazon-prime/10">
+                    <i data-lucide="package" class="w-12 h-12"></i>
+                </div>
+                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wide">คำสั่งซื้อทั้งหมด (Orders)</p>
+                <h4 id="kpiTotalOrders" class="text-2xl sm:text-3xl font-extrabold text-white mt-2">0 ออเดอร์</h4>
+                <div class="flex items-center gap-1.5 mt-2 text-[10px] text-amazon-prime">
+                    <i data-lucide="truck" class="w-3.5 h-3.5"></i>
+                    <span>ส่งออกสำเร็จพร้อมพัสดุ</span>
+                </div>
+            </div>
+            <!-- KPI 3 -->
+            <div class="bg-[#1B222D] border border-slate-800 rounded-2xl p-6 relative overflow-hidden shadow-glow border-t-2 border-t-amazon-gold">
+                <div class="absolute right-4 top-4 text-amazon-gold/10">
+                    <i data-lucide="layers" class="w-12 h-12"></i>
+                </div>
+                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wide">ปริมาณขายสะสม (Units)</p>
+                <h4 id="kpiTotalQty" class="text-2xl sm:text-3xl font-extrabold text-white mt-2">0 ชิ้น</h4>
+                <div class="flex items-center gap-1.5 mt-2 text-[10px] text-amazon-gold">
+                    <i data-lucide="star" class="w-3.5 h-3.5"></i>
+                    <span>สินค้าส่งผ่านคลังสินค้า</span>
+                </div>
+            </div>
+            <!-- KPI 4 -->
+            <div class="bg-[#1B222D] border border-slate-800 rounded-2xl p-6 relative overflow-hidden shadow-glow border-t-2 border-t-[#8b5cf6]">
+                <div class="absolute right-4 top-4 text-violet-500/10">
+                    <i data-lucide="percent" class="w-12 h-12"></i>
+                </div>
+                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wide">มูลค่าเฉลี่ยต่อบิล (AOV)</p>
+                <h4 id="kpiAvgSales" class="text-2xl sm:text-3xl font-extrabold text-white mt-2">฿0.00</h4>
+                <div class="flex items-center gap-1.5 mt-2 text-[10px] text-violet-400">
+                    <i data-lucide="activity" class="w-3.5 h-3.5"></i>
+                    <span>อัตราเฉลี่ยการช้อปของลูกค้า</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charting Grid Block 1 -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Trend line chart -->
+            <div class="lg:col-span-2 bg-[#1B222D] border border-slate-800 rounded-2xl p-6 shadow-glow">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                    <div>
+                        <h3 class="text-base font-bold text-white flex items-center gap-2">
+                            <i data-lucide="line-chart" class="text-amazon-orange"></i> แนวโน้มการเติบโตยอดขาย (Sales Velocity Over Time)
+                        </h3>
+                        <p class="text-xs text-slate-400 mt-0.5">การเปรียบเทียบยอดขายสุทธิสะสมแยกตามรอบช่วงรายเดือน</p>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="trendChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Region pie chart -->
+            <div class="bg-[#1B222D] border border-slate-800 rounded-2xl p-6 shadow-glow">
+                <div class="mb-6">
+                    <h3 class="text-base font-bold text-white flex items-center gap-2">
+                        <i data-lucide="pie-chart" class="text-amazon-prime"></i> ส่วนแบ่งตลาดแยกตามภูมิภาค (Market Breakdown)
+                    </h3>
+                    <p class="text-xs text-slate-400 mt-0.5">สัดส่วนรายรับยอดจำหน่ายในภูมิภาคต่างประเทศและกรุงเทพฯ</p>
+                </div>
+                <div class="chart-container">
+                    <canvas id="regionChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charting Grid Block 2 -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Brand/Seller Chart -->
+            <div class="bg-[#1B222D] border border-slate-800 rounded-2xl p-6 shadow-glow">
+                <div class="mb-6">
+                    <h3 class="text-base font-bold text-white flex items-center gap-2">
+                        <i data-lucide="user-check" class="text-[#10b981]"></i> จัดอันดับผลงานผู้ขายและแบรนด์ยอดนิยม (Leaderboard)
+                    </h3>
+                    <p class="text-xs text-slate-400 mt-0.5">การเปรียบเทียบยอดขายระหว่างทีมพนักงานหรือร้านค้าคู่ค้า</p>
+                </div>
+                <div class="chart-container">
+                    <canvas id="salespersonChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Category Chart -->
+            <div class="bg-[#1B222D] border border-slate-800 rounded-2xl p-6 shadow-glow">
+                <div class="mb-6">
+                    <h3 class="text-base font-bold text-white flex items-center gap-2">
+                        <i data-lucide="folder" class="text-amazon-gold"></i> ยอดขายตามหมวดหมู่และกลุ่มสินค้าหลัก (Category Share)
+                    </h3>
+                    <p class="text-xs text-slate-400 mt-0.5">ยอดรวมยอดขายเทียบในแต่ละกลุ่มผลิตภัณฑ์</p>
+                </div>
+                <div class="chart-container">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Insights Board -->
+        <div id="aiInsightsPanel" class="bg-gradient-to-r from-[#1B222D] to-[#131921] border border-amazon-orange/40 rounded-2xl p-6 relative overflow-hidden hidden shadow-glow">
+            <div class="absolute -top-24 -left-24 w-48 h-48 bg-amazon-orange/10 rounded-full blur-3xl pointer-events-none"></div>
+            
+            <div class="flex items-center justify-between pb-4 border-b border-slate-800 mb-6">
+                <div class="flex items-center space-x-3">
+                    <div class="p-2 bg-amazon-orange/20 rounded-xl text-amazon-orange">
+                        <i data-lucide="sparkles" class="w-5 h-5 animate-pulse"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-white">รายงานวิเคราะห์เชิงกลยุทธ์อัจฉริยะ (Prime Business Insights)</h3>
+                        <p class="text-xs text-slate-400">ประมวลผลกลยุทธ์การขายบนแพลตฟอร์ม Amazon อย่างเฉียบคมด้วย Gemini Generative AI</p>
+                    </div>
+                </div>
+                
+                <div class="flex items-center gap-2">
+                    <button id="copyAiInsightBtn" class="bg-[#232F3E] hover:bg-[#2D3C4F] border border-slate-700 text-slate-200 text-xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition">
+                        <i data-lucide="copy" class="w-3.5 h-3.5"></i> คัดลอก
+                    </button>
+                    <button id="closeAiBtn" class="text-slate-400 hover:text-white transition">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Loader State -->
+            <div id="aiLoader" class="hidden py-12 flex flex-col items-center justify-center space-y-4">
+                <div class="relative w-16 h-16">
+                    <div class="absolute inset-0 border-4 border-amazon-orange/20 rounded-full"></div>
+                    <div class="absolute inset-0 border-4 border-t-amazon-orange rounded-full animate-spin"></div>
+                </div>
+                <div class="text-center">
+                    <p class="text-sm font-semibold text-amazon-orange animate-pulse">กำลังสแกนและประมวลผลสถิติ E-commerce จากข้อมูลแดชบอร์ด...</p>
+                    <p class="text-xs text-slate-500 mt-1">กรุณารอสักครู่ ระบบกำลังสื่อสารกับโมเดลวิเคราะห์ข้อมูลระดับอาวุโส</p>
+                </div>
+            </div>
+
+            <!-- Content Area -->
+            <div id="aiContent" class="prose prose-invert prose-indigo max-w-none text-slate-300 text-xs leading-relaxed space-y-4">
+                <!-- Content will be injected here -->
+            </div>
+        </div>
+
+        <!-- Raw Data Explorer Table -->
+        <div class="bg-[#1B222D] border border-slate-800 rounded-2xl overflow-hidden shadow-glow">
+            <div class="p-6 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-[#131921]">
+                <div>
+                    <h3 class="text-base font-bold text-white flex items-center gap-2">
+                        <i data-lucide="database" class="text-slate-400"></i> ตารางตรวจสอบรายงานดิบระดับบิล (Data Explorer)
+                    </h3>
+                    <p class="text-xs text-slate-400 mt-0.5">ค้นหา ตรวจสอบความสอดคล้อง และวิเคราะห์ข้อมูลในบิลรายการนำเข้าทั้งหมด</p>
+                </div>
+                <div class="text-xs text-amazon-orange bg-amazon-orange/10 border border-amazon-orange/20 px-3 py-1 rounded-full font-bold" id="dataRecordCount">
+                    ทั้งหมด 0 รายการ
+                </div>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="border-b border-slate-800 bg-[#0F1115] text-slate-400 text-xs font-bold tracking-wider">
+                            <th class="py-3 px-6">วันที่ทำรายการ</th>
+                            <th class="py-3 px-6">ผู้ขาย / แบรนด์</th>
+                            <th class="py-3 px-6">ภูมิภาค / แหล่งจำหน่าย</th>
+                            <th class="py-3 px-6">หมวดหมู่</th>
+                            <th class="py-3 px-6">รายการผลิตภัณฑ์</th>
+                            <th class="py-3 px-6 text-right">จำนวน</th>
+                            <th class="py-3 px-6 text-right">ราคาต่อชิ้น</th>
+                            <th class="py-3 px-6 text-right text-amazon-orange">ยอดสุทธิ (บาท)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="rawTableBody" class="divide-y divide-slate-800/50 text-xs text-slate-300">
+                        <!-- Table rows generated dynamically -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination block -->
+            <div class="p-4 bg-[#0F1115] border-t border-slate-800 flex items-center justify-between gap-4 text-xs">
+                <button id="prevPageBtn" class="bg-[#232F3E] hover:bg-[#2D3C4F] text-slate-300 px-3 py-1.5 rounded-lg transition flex items-center gap-1 disabled:opacity-30 disabled:cursor-not-allowed">
+                    <i data-lucide="chevron-left" class="w-4 h-4"></i> ก่อนหน้า
+                </button>
+                <span id="pageIndicator" class="text-slate-400 font-bold">หน้า 1 จาก 1</span>
+                <button id="nextPageBtn" class="bg-[#232F3E] hover:bg-[#2D3C4F] text-slate-300 px-3 py-1.5 rounded-lg transition flex items-center gap-1 disabled:opacity-30 disabled:cursor-not-allowed">
+                    ถัดไป <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Global Toast Notifications -->
+    <div id="toastContainer" class="fixed bottom-5 right-5 space-y-2 z-50 pointer-events-none"></div>
+
+    <footer class="border-t border-slate-800 bg-[#131921] py-6 mt-12 text-center text-xs text-slate-500">
+        <div class="max-w-7xl mx-auto px-4">
+            <p>© 2026 9Expert x Amazon Sales Dashboard. พัฒนาและออกแบบเพื่อความพรีเมียมด้วยมาตรฐานแบรนด์ระดับสากล</p>
+            <p class="mt-1 text-[10px] text-slate-600">วิเคราะห์ข้อมูลได้อย่างยืดหยุ่นจากไฟล์ <span class="text-amazon-orange font-semibold">Amazon_Sales_Dataset.csv.xlsx</span> และไฟล์พรีเซนต์ทั่วไป</p>
+        </div>
+    </footer>
+
+    <script>
+        // State management
+        let originalSalesData = [];
+        let activeSalesData = [];
+        let filteredSalesData = [];
+        
+        // Table Pagination variables
+        let currentPage = 1;
+        const rowsPerPage = 10;
+
+        // ChartJS global instances
+        let trendChart = null;
+        let regionChart = null;
+        let salespersonChart = null;
+        let categoryChart = null;
+
+        // Generates default dataset tailored to Amazon product ecosystem
+        function generateAmazonDemoData() {
+            const sellers = ["Kindle Direct Store", "Anker Tech", "Ring Smart Home", "Acoustics Lab", "HomePantry Corp"];
+            const regions = ["US East", "EU Central", "APAC Tokyo", "US West", "UK Mainland"];
+            const categories = {
+                "Electronics & Tech": [
+                    { name: "Kindle Paperwhite 16GB", price: 4990 },
+                    { name: "Anker USB-C Power Bank 20K", price: 1890 },
+                    { name: "Echo Pop Compact Smart Speaker", price: 1450 },
+                    { name: "USB-C Multi-port Adapter", price: 890 }
+                ],
+                "Smart Home Devices": [
+                    { name: "Ring Video Doorbell Wired", price: 3490 },
+                    { name: "Smart LED Bulb Starter Pack", price: 1200 },
+                    { name: "Outdoor Motion Security Cam", price: 4200 }
+                ],
+                "Premium Stationery": [
+                    { name: "Minimalist Leather Journal", price: 650 },
+                    { name: "Imported Fountain Pen Set", price: 1590 },
+                    { name: "Desk Mat Extended Wool Felt", price: 890 }
+                ],
+                "Network Accessories": [
+                    { name: "Eero Wi-Fi 6 Mesh Router", price: 5900 },
+                    { name: "Cat 8 Ethernet Cable 10m", price: 450 }
+                ]
+            };
+
+            const mockData = [];
+            const cats = Object.keys(categories);
+            const baseDate = new Date(2025, 0, 1);
+
+            for (let i = 0; i < 150; i++) {
+                const seller = sellers[Math.floor(Math.random() * sellers.length)];
+                let region = regions[Math.floor(Math.random() * regions.length)];
+                
+                // Establish localized correlation
+                if (seller === "Kindle Direct Store") region = "US East";
+                if (seller === "Anker Tech") region = "APAC Tokyo";
+
+                const category = cats[Math.floor(Math.random() * cats.length)];
+                const productList = categories[category];
+                const product = productList[Math.floor(Math.random() * productList.length)];
+                
+                const qty = Math.floor(Math.random() * 6) + 1;
+                const unitPrice = product.price;
+                const total = qty * unitPrice;
+
+                // Evenly disperse across the timeline
+                let randDays = Math.floor(Math.random() * 340);
+                if (Math.random() > 0.6) {
+                    randDays = Math.floor(Math.random() * 60) + 280; 
+                }
+                const orderDate = new Date(baseDate.getTime() + (randDays * 24 * 60 * 60 * 1000));
+
+                mockData.push({
+                    OrderDate: orderDate,
+                    Salesperson: seller,
+                    Region: region,
+                    Category: category,
+                    Product: product.name,
+                    Quantity: qty,
+                    UnitPrice: unitPrice,
+                    Total: total
+                });
+            }
+
+            mockData.sort((a, b) => a.OrderDate - b.OrderDate);
+            return mockData;
+        }
+
+        // Parsing dates from excel serial or common formats safely
+        function parseExcelDate(val) {
+            if (!val) return new Date();
+            if (val instanceof Date) return val;
+            if (typeof val === 'number') {
+                const dateVal = new Date((val - 25569) * 86400 * 1000);
+                return dateVal;
+            }
+            const d = new Date(val);
+            if (!isNaN(d.getTime())) return d;
+            return new Date();
+        }
+
+        // Strips any local currency formatting strings to parse valid floats
+        function cleanNumericString(val) {
+            if (typeof val === 'number') return val;
+            if (!val) return 0;
+            const cleaned = String(val).replace(/[^0-9.-]/g, '');
+            return parseFloat(cleaned) || 0;
+        }
+
+        // Map various possible sheet columns dynamically to standard dashboard schema
+        function mapDataKeys(rawRow, index = 0) {
+            const row = {};
+            const keys = Object.keys(rawRow);
+            
+            const findKey = (patterns) => {
+                return keys.find(k => {
+                    const kl = k.toLowerCase().trim();
+                    return patterns.some(p => kl.includes(p));
+                });
+            };
+            
+            const dateKey = findKey(["orderdate", "date", "วันที่", "วันสั่งซื้อ", "วันขาย", "timestamp"]);
+            const salesKey = findKey(["salesperson", "sales", "employee", "พนักงาน", "ผู้ขาย", "sale", "ชื่อผู้ขาย", "user_name", "seller", "brand", "แบรนด์"]);
+            const regionKey = findKey(["region", "zone", "ภูมิภาค", "เขต", "ภาค", "พื้นที่", "country", "market", "ช่องทาง", "location"]);
+            const categoryKey = findKey(["category", "หมวดหมู่", "ประเภท", "กลุ่มสินค้า", "ชนิด"]);
+            const productKey = findKey(["product", "item", "สินค้า", "ชื่อสินค้า", "รายการ", "รายการสินค้า", "product_name", "title"]);
+            const qtyKey = findKey(["qty", "quantity", "จำนวน", "จำนวนชิ้น", "ยอดสั่งซื้อ", "quantity_ordered"]);
+            const priceKey = findKey(["unitprice", "price", "ราคา", "ราคาต่อหน่วย", "ราคาต่อชิ้น", "discounted_price", "actual_price"]);
+            const totalKey = findKey(["total", "amount", "sales", "ยอดรวม", "ยอดขาย", "ราคารวม", "เงินรวม"]);
+
+            if (dateKey) {
+                row.OrderDate = parseExcelDate(rawRow[dateKey]);
+            } else {
+                const baseDate = new Date(2025, 0, 1);
+                row.OrderDate = new Date(baseDate.getTime() + ((index % 350) * 24 * 60 * 60 * 1000));
+            }
+
+            row.Salesperson = salesKey ? String(rawRow[salesKey]).trim() : "Amazon Store Seller";
+            row.Region = regionKey ? String(rawRow[regionKey]).trim() : "Global Marketplace";
+            
+            if (categoryKey) {
+                let catVal = String(rawRow[categoryKey]).trim();
+                if (catVal.includes('|')) {
+                    catVal = catVal.split('|')[0].trim(); // Extract primary parent category for Amazon items
+                }
+                row.Category = catVal || "General Catalog";
+            } else {
+                row.Category = "General Catalog";
+            }
+
+            row.Product = productKey ? String(rawRow[productKey]).trim() : "Prime Listing";
+            row.Quantity = qtyKey ? parseInt(rawRow[qtyKey], 10) || 1 : 1;
+            row.UnitPrice = priceKey ? cleanNumericString(rawRow[priceKey]) : 0;
+            
+            if (totalKey) {
+                row.Total = cleanNumericString(rawRow[totalKey]);
+            } else {
+                row.Total = row.Quantity * row.UnitPrice;
+            }
+            
+            return row;
+        }
+
+        // Populate filters with unique options
+        function populateFilters(data) {
+            const regions = [...new Set(data.map(d => d.Region))];
+            const sellers = [...new Set(data.map(d => d.Salesperson))];
+            const categories = [...new Set(data.map(d => d.Category))];
+
+            const populateSelect = (elementId, values) => {
+                const select = document.getElementById(elementId);
+                const currentValue = select.value;
+                select.innerHTML = '<option value="ALL">-- แสดงทั้งหมด --</option>';
+                values.sort().forEach(val => {
+                    if (val) {
+                        select.innerHTML += `<option value="${val}">${val}</option>`;
+                    }
+                });
+                if (values.includes(currentValue)) {
+                    select.value = currentValue;
+                } else {
+                    select.value = "ALL";
+                }
+            };
+
+            populateSelect("regionFilter", regions);
+            populateSelect("salesFilter", sellers);
+            populateSelect("categoryFilter", categories);
+        }
+
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB', maximumFractionDigits: 0 }).format(value);
+        }
+
+        // Computes overall statistics from filtered data rows
+        function getDashboardStats(data) {
+            if (data.length === 0) {
+                return {
+                    totalSales: 0,
+                    totalOrders: 0,
+                    totalQty: 0,
+                    avgOrderValue: 0,
+                    topRegion: { name: 'ไม่มีข้อมูล', value: 0 },
+                    topSalesperson: { name: 'ไม่มีข้อมูล', value: 0 },
+                    topCategory: { name: 'ไม่มีข้อมูล', value: 0 },
+                    monthlySales: {},
+                    salespersonRanking: [],
+                    regionBreakdown: {}
+                };
+            }
+
+            let totalSales = 0;
+            let totalQty = 0;
+            
+            const regionMap = {};
+            const sellerMap = {};
+            const categoryMap = {};
+            const monthMap = {};
+
+            data.forEach(item => {
+                totalSales += item.Total;
+                totalQty += item.Quantity;
+
+                regionMap[item.Region] = (regionMap[item.Region] || 0) + item.Total;
+                sellerMap[item.Salesperson] = (sellerMap[item.Salesperson] || 0) + item.Total;
+                categoryMap[item.Category] = (categoryMap[item.Category] || 0) + item.Total;
+
+                const d = new Date(item.OrderDate);
+                const year = d.getFullYear();
+                const month = d.toLocaleString('th-TH', { month: 'short' });
+                const monthKey = `${year} - ${month}`;
+                monthMap[monthKey] = (monthMap[monthKey] || 0) + item.Total;
+            });
+
+            const getTopObject = (map) => {
+                let topName = "ไม่มีข้อมูล";
+                let topVal = 0;
+                Object.entries(map).forEach(([name, val]) => {
+                    if (val > topVal) {
+                        topVal = val;
+                        topName = name;
+                    }
+                });
+                return { name: topName, value: topVal };
+            };
+
+            const salespersonRanking = Object.entries(sellerMap)
+                .map(([name, val]) => ({ name, value: val }))
+                .sort((a, b) => b.value - a.value);
+
+            return {
+                totalSales,
+                totalOrders: data.length,
+                totalQty,
+                avgOrderValue: totalSales / data.length,
+                topRegion: getTopObject(regionMap),
+                topSalesperson: getTopObject(sellerMap),
+                topCategory: getTopObject(categoryMap),
+                monthlySales: monthMap,
+                salespersonRanking,
+                regionBreakdown: regionMap
+            };
+        }
+
+        // Refresh and draw all dashboards chart using Amazon Brand Identity Design
+        function renderCharts(stats) {
+            // 1. Line Trend Chart with Orange-Prime Glow
+            const trendCtx = document.getElementById('trendChart').getContext('2d');
+            if (trendChart) trendChart.destroy();
+            
+            const trendLabels = Object.keys(stats.monthlySales);
+            const trendValues = Object.values(stats.monthlySales);
+
+            trendChart = new Chart(trendCtx, {
+                type: 'line',
+                data: {
+                    labels: trendLabels,
+                    datasets: [{
+                        label: 'ยอดจำหน่ายสะสม (บาท)',
+                        data: trendValues,
+                        borderColor: '#FF9900', // Amazon Orange
+                        backgroundColor: 'rgba(255, 153, 0, 0.08)',
+                        fill: true,
+                        tension: 0.4,
+                        borderWidth: 3,
+                        pointBackgroundColor: '#00A8E1', // Prime Blue Accent
+                        pointBorderColor: '#fff',
+                        pointHoverRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ` ยอดรวมสุทธิ: ${formatCurrency(context.raw)}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            grid: { color: 'rgba(255, 255, 255, 0.03)' },
+                            ticks: {
+                                color: '#94a3b8',
+                                callback: function(value) { return formatCurrency(value); }
+                            }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: '#94a3b8' }
+                        }
+                    }
+                }
+            });
+
+            // 2. Region Pie / Donut with Prime Theme
+            const regionCtx = document.getElementById('regionChart').getContext('2d');
+            if (regionChart) regionChart.destroy();
+
+            const regionLabels = Object.keys(stats.regionBreakdown);
+            const regionValues = Object.values(stats.regionBreakdown);
+
+            regionChart = new Chart(regionCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: regionLabels,
+                    datasets: [{
+                        data: regionValues,
+                        backgroundColor: [
+                            '#FF9900', // Amazon Orange
+                            '#00A8E1', // Prime Blue
+                            '#F2C200', // Amazon Gold
+                            '#37475A', // Charcoal Slate
+                            '#10b981', // Emerald
+                            '#8b5cf6'  // Purple
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#131921'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: { color: '#94a3b8', boxWidth: 10, font: { size: 11 } }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const sum = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percent = ((context.raw / sum) * 100).toFixed(1);
+                                    return ` ${context.label}: ${formatCurrency(context.raw)} (${percent}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // 3. Brand/Seller Leaderboard Performance Bar
+            const salesCtx = document.getElementById('salespersonChart').getContext('2d');
+            if (salespersonChart) salespersonChart.destroy();
+
+            const topSellers = stats.salespersonRanking.slice(0, 7);
+            const sellerLabels = topSellers.map(s => s.name);
+            const sellerValues = topSellers.map(s => s.value);
+
+            salespersonChart = new Chart(salesCtx, {
+                type: 'bar',
+                data: {
+                    labels: sellerLabels,
+                    datasets: [{
+                        label: 'รายรับทั้งหมด',
+                        data: sellerValues,
+                        backgroundColor: 'rgba(16, 185, 129, 0.85)',
+                        hoverBackgroundColor: '#10b981',
+                        borderRadius: 6,
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) { return `ยอดสุทธิ: ${formatCurrency(context.raw)}`; }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: 'rgba(255, 255, 255, 0.03)' },
+                            ticks: {
+                                color: '#94a3b8',
+                                callback: function(value) { return formatCurrency(value); }
+                            }
+                        },
+                        y: {
+                            grid: { display: false },
+                            ticks: { color: '#94a3b8' }
+                        }
+                    }
+                }
+            });
+
+            // 4. Product Category performance
+            const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+            if (categoryChart) categoryChart.destroy();
+
+            const catSummary = {};
+            filteredSalesData.forEach(item => {
+                catSummary[item.Category] = (catSummary[item.Category] || 0) + item.Total;
+            });
+            const sortedCats = Object.entries(catSummary)
+                .map(([name, value]) => ({ name, value }))
+                .sort((a, b) => b.value - a.value);
+
+            categoryChart = new Chart(categoryCtx, {
+                type: 'bar',
+                data: {
+                    labels: sortedCats.map(c => c.name),
+                    datasets: [{
+                        label: 'มูลค่ายอดจำหน่ายร่วมรายกลุ่มสินค้า',
+                        data: sortedCats.map(c => c.value),
+                        backgroundColor: 'rgba(242, 194, 0, 0.8)', // Gold Accent
+                        hoverBackgroundColor: '#F2C200',
+                        borderRadius: 6,
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) { return `ยอดขายรวม: ${formatCurrency(context.raw)}`; }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            grid: { color: 'rgba(255, 255, 255, 0.03)' },
+                            ticks: {
+                                color: '#94a3b8',
+                                callback: function(value) { return formatCurrency(value); }
+                            }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: '#94a3b8' }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Global Toast Notification Helper
+        function showNotification(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            
+            const colors = {
+                success: 'bg-[#1B222D] border-emerald-500/30 text-emerald-400',
+                error: 'bg-[#1B222D] border-rose-500/30 text-rose-400',
+                info: 'bg-[#1B222D] border-amazon-prime/30 text-amazon-prime'
+            };
+
+            const icons = {
+                success: 'check-circle',
+                error: 'alert-triangle',
+                info: 'info'
+            };
+
+            toast.className = `flex items-center gap-3 px-4 py-3 border rounded-xl shadow-2xl transition duration-300 pointer-events-auto transform translate-y-2 opacity-0 max-w-sm ${colors[type]}`;
+            toast.innerHTML = `
+                <i data-lucide="${icons[type]}" class="w-5 h-5 flex-shrink-0"></i>
+                <div class="text-xs font-bold">${message}</div>
+            `;
+
+            container.appendChild(toast);
+            lucide.createIcons();
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            }, 10);
+
+            setTimeout(() => {
+                toast.classList.add('translate-y-2', 'opacity-0');
+                setTimeout(() => { toast.remove(); }, 300);
+            }, 4000);
+        }
+
+        function updateTable() {
+            const tbody = document.getElementById('rawTableBody');
+            tbody.innerHTML = '';
+
+            const startIndex = (currentPage - 1) * rowsPerPage;
+            const endIndex = startIndex + rowsPerPage;
+            const pageData = filteredSalesData.slice(startIndex, endIndex);
+
+            if (pageData.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="text-center py-8 text-slate-500">
+                            ไม่มีพบรายการสินค้าที่สอดคล้องตามตัวกรองในปัจจุบัน
+                        </td>
+                    </tr>
+                `;
+                document.getElementById('pageIndicator').innerText = "หน้า 1 จาก 1";
+                document.getElementById('prevPageBtn').disabled = true;
+                document.getElementById('nextPageBtn').disabled = true;
+                return;
+            }
+
+            pageData.forEach(item => {
+                const formattedDate = new Date(item.OrderDate).toLocaleDateString('th-TH', {
+                    year: 'numeric', month: 'short', day: 'numeric'
+                });
+
+                tbody.innerHTML += `
+                    <tr class="hover:bg-[#232F3E]/30 transition-colors">
+                        <td class="py-3.5 px-6 font-medium text-slate-200">${formattedDate}</td>
+                        <td class="py-3.5 px-6 text-slate-300 font-bold">${item.Salesperson}</td>
+                        <td class="py-3.5 px-6"><span class="bg-[#232F3E] text-slate-300 px-2.5 py-1 rounded-full border border-slate-700">${item.Region}</span></td>
+                        <td class="py-3.5 px-6 text-slate-400">${item.Category}</td>
+                        <td class="py-3.5 px-6 font-semibold text-white max-w-xs truncate">${item.Product}</td>
+                        <td class="py-3.5 px-6 text-right font-medium">${item.Quantity}</td>
+                        <td class="py-3.5 px-6 text-right">${formatCurrency(item.UnitPrice)}</td>
+                        <td class="py-3.5 px-6 text-right font-extrabold text-amazon-orange">${formatCurrency(item.Total)}</td>
+                    </tr>
+                `;
+            });
+
+            const totalPages = Math.ceil(filteredSalesData.length / rowsPerPage) || 1;
+            document.getElementById('pageIndicator').innerText = `หน้า ${currentPage} จาก ${totalPages}`;
+            document.getElementById('prevPageBtn').disabled = currentPage === 1;
+            document.getElementById('nextPageBtn').disabled = currentPage === totalPages;
+            document.getElementById('dataRecordCount').innerText = `แสดงทั้งหมด ${filteredSalesData.length.toLocaleString()} บิล`;
+        }
+
+        // Applies Slicers filter logic sequentially
+        function applyFilters() {
+            const regionVal = document.getElementById('regionFilter').value;
+            const salesVal = document.getElementById('salesFilter').value;
+            const categoryVal = document.getElementById('categoryFilter').value;
+            const searchVal = document.getElementById('searchInput').value.toLowerCase().trim();
+
+            filteredSalesData = activeSalesData.filter(item => {
+                const matchRegion = regionVal === "ALL" || item.Region === regionVal;
+                const matchSales = salesVal === "ALL" || item.Salesperson === salesVal;
+                const matchCategory = categoryVal === "ALL" || item.Category === categoryVal;
+                const matchSearch = !searchVal || 
+                    item.Product.toLowerCase().includes(searchVal) ||
+                    item.Category.toLowerCase().includes(searchVal) ||
+                    item.Salesperson.toLowerCase().includes(searchVal);
+
+                return matchRegion && matchSales && matchCategory && matchSearch;
+            });
+
+            currentPage = 1;
+            const stats = getDashboardStats(filteredSalesData);
+            
+            document.getElementById('kpiTotalSales').innerText = formatCurrency(stats.totalSales);
+            document.getElementById('kpiTotalOrders').innerText = `${stats.totalOrders.toLocaleString()} บิล`;
+            document.getElementById('kpiTotalQty').innerText = `${stats.totalQty.toLocaleString()} ชิ้น`;
+            document.getElementById('kpiAvgSales').innerText = formatCurrency(stats.avgOrderValue);
+
+            renderCharts(stats);
+            updateTable();
+        }
+
+        function processRawData(jsonData) {
+            try {
+                activeSalesData = jsonData.map((row, index) => mapDataKeys(row, index));
+                filteredSalesData = [...activeSalesData];
+                
+                populateFilters(activeSalesData);
+                applyFilters();
+            } catch (err) {
+                console.error(err);
+                showNotification("โครงสร้างข้อมูลในไฟล์ไม่รองรับ กรุณาอ้างอิงฟิลด์ Amazon ให้สอดคล้อง", "error");
+            }
+        }
+
+        function handleFileUpload(file) {
+            if (!file) return;
+            
+            const fileType = file.name.split('.').pop().toLowerCase();
+            const reader = new FileReader();
+
+            document.getElementById('currentFileName').innerText = file.name;
+            document.getElementById('fileTracker').classList.remove('hidden');
+
+            reader.onload = function(e) {
+                try {
+                    let jsonData = [];
+                    if (fileType === 'csv') {
+                        const text = e.target.result;
+                        jsonData = parseCSVText(text);
+                    } else {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        
+                        let sheetName = workbook.SheetNames.find(name => 
+                            ["ORDERDETAILS", "SALES", "DATA", "MAIN", "SHEET1", "ยอดขาย", "AMAZON", "CATALOG"].includes(name.toUpperCase())
+                        ) || workbook.SheetNames[0];
+                        
+                        const worksheet = workbook.Sheets[sheetName];
+                        jsonData = XLSX.utils.sheet_to_json(worksheet);
+                    }
+
+                    if (jsonData.length === 0) {
+                        showNotification("ไม่พบรายงานบันทึกประวัติการขายในเอกสาร", "error");
+                        return;
+                    }
+
+                    processRawData(jsonData);
+                    showNotification(`อัปเดตระบบเสร็จสิ้น ประมวลผลจำนวน ${jsonData.length} รายการ`, "success");
+                    
+                } catch (err) {
+                    console.error(err);
+                    showNotification("การนำเข้าเอกสารเกิดความล้มเหลว โครงสร้างอาจชำรุด", "error");
+                }
+            };
+
+            if (fileType === 'csv') {
+                reader.readAsText(file, 'UTF-8');
+            } else {
+                reader.readAsArrayBuffer(file);
+            }
+        }
+
+        function parseCSVText(text) {
+            const lines = text.split(/\r?\n/);
+            if (lines.length < 2) return [];
+            
+            const headers = lines[0].split(',').map(h => h.replace(/^"|"$/g, '').trim());
+            const result = [];
+            
+            for (let i = 1; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (!line) continue;
+                
+                const values = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || line.split(',');
+                if (values.length === headers.length) {
+                    const row = {};
+                    headers.forEach((h, index) => {
+                        let val = values[index] ? values[index].trim() : '';
+                        row[h] = val.replace(/^"|"$/g, '');
+                    });
+                    result.push(row);
+                }
+            }
+            return result;
+        }
+
+        // Request deep analysis synthesis from Gemini Pro with Exponential Backoff
+        async function runAiAnalysis() {
+            const panel = document.getElementById('aiInsightsPanel');
+            const loader = document.getElementById('aiLoader');
+            const content = document.getElementById('aiContent');
+
+            panel.classList.remove('hidden');
+            loader.classList.remove('hidden');
+            content.classList.add('hidden');
+            
+            panel.scrollIntoView({ behavior: 'smooth' });
+
+            const stats = getDashboardStats(filteredSalesData);
+
+            const systemPrompt = `คุณคืออัจฉริยะวิเคราะห์ธุรกิจค้าปลีกอีคอมเมิร์ซระดับโลก (Senior Director of Amazon Brand Strategy & Retail Intelligence) หน้าที่ของคุณคือการวิเคราะห์รายงานยอดขายและการตลาดจากข้อมูลที่อัปโหลดมา (อ้างอิงไฟล์ Amazon_Sales_Dataset.csv.xlsx หรือยอดขายของแบรนด์) 
+
+กรุณาให้ข้อมูลวิเคราะห์เชิงลึกระดับสูง (Executive Report) ในรูปแบบภาษาไทยที่มีพลัง มีความเป็นผู้นำทางธุรกิจ โดยสรุปประเด็นหลักดังนี้:
+1. 📈 **สรุปความเคลื่อนไหวทางธุรกิจ (Market Dynamics)**: รายงานผล GMV การเจริญเติบโต และความถี่ในการขายของร้านค้า/คู่ค้า
+2. 🔍 **เจาะลึกกลุ่มสินค้าตัวเลือกที่ทรงอิทธิพล (Brand & Category Dominance)**: ชี้เฉพาะจุดแข็งจากหมวดหมู่และแบรนด์ที่สร้างส่วนแบ่งกำไรสูงสุด
+3. ⚠️ **สิ่งที่ต้องเฝ้าระวังและปรับโครงสร้างการจำหน่าย (Market Obstacles)**: รายงานสินค้าที่มีแนวโน้มติดขัด คลังสินค้าช้า หรืออัตราคำสั่งซื้อน้อยในภูมิภาคที่ต่ำกว่าเป้าหมาย
+4. 🚀 **ข้อเสนอแผนกลยุทธ์ 3 ขั้นตอนระดับ Prime Blueprint**: แนะนำนวัตกรรมกลยุทธ์เฉพาะที่ปฎิบัติได้จริง เช่น การจับคู่สินค้าผ่านชุดบันเดิล (Product Bundling), การเพิ่มประสิทธิภาพของแคมเปญโฆษณาในคลัง Amazon (FBA Optimization), และการคุมอัตรากำไร Dynamic Pricing
+
+*ห้ามสร้างตัวเลขขึ้นมาเองโดยเด็ดขาด ให้ยึดจากตัวเลขสถิติจริงที่ระบุใน Prompt เท่านั้นและเขียนรายงานให้ออกมาเฉียบคมพรีเมียม สไตล์ผู้บริหารแบรนด์ระดับสากล*`;
+
+            const userQuery = `นี่คือชุดรายงานยอดขายพรีเมียมปัจจุบันจาก Brand Dashboard ของเรา:
+- ยอดขายรวม (GMV): ${formatCurrency(stats.totalSales)}
+- ยอดสั่งซื้อรวมเฉลี่ยต่อบิล (AOV): ${formatCurrency(stats.avgOrderValue)}
+- ปริมาณสินค้าที่จัดจำหน่ายสำเร็จ: ${stats.totalQty.toLocaleString()} ชิ้น
+- คำสั่งซื้อรวม (Orders): ${stats.totalOrders.toLocaleString()} ออเดอร์
+- ช่องทาง/ภูมิภาคที่ส่งออกสูงสุด: ${stats.topRegion.name} (ยอดสุทธิ ${formatCurrency(stats.topRegion.value)})
+- แบรนด์ผู้จำหน่าย/ผู้ขายที่ผลงานเด่นที่สุด: ${stats.topSalesperson.name} (ยอดสุทธิ ${formatCurrency(stats.topSalesperson.value)})
+- กลุ่มสินค้าที่มียอดสั่งซื้อสูงสุด: ${stats.topCategory.name} (ยอดสุทธิ ${formatCurrency(stats.topCategory.value)})
+
+ข้อมูลยอดขายจำแนกรายเวลา:
+${JSON.stringify(stats.monthlySales, null, 2)}
+
+อันดับแบรนด์ในตลาดปัจจุบัน:
+${JSON.stringify(stats.salespersonRanking, null, 2)}
+
+สัดส่วนรายได้แยกรายพื้นที่:
+${JSON.stringify(stats.regionBreakdown, null, 2)}
+
+โปรดสังเคราะห์จุดเด่น-จุดด้อย และเขียนวิสัยทัศน์ที่คู่ควรสำหรับผู้บริหารไทยในการครองพื้นที่ส่วนแบ่งการตลาดในอนาคต`;
+
+            const apiKey = "";
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+            const payload = {
+                contents: [{ parts: [{ text: userQuery }] }],
+                systemInstruction: { parts: [{ text: systemPrompt }] }
+            };
+
+            const fetchWithRetry = async (url, options, retries = 3, delay = 1000) => {
+                try {
+                    const response = await fetch(url, options);
+                    if (!response.ok) {
+                        if (response.status === 429 && retries > 0) {
+                            await new Promise(resolve => setTimeout(resolve, delay));
+                            return fetchWithRetry(url, options, retries - 1, delay * 2);
+                        }
+                        throw new Error(`HTTP Error Status: ${response.status}`);
+                    }
+                    return response;
+                } catch (error) {
+                    if (retries > 0) {
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        return fetchWithRetry(url, options, retries - 1, delay * 2);
+                    }
+                    throw error;
+                }
+            };
+
+            try {
+                const response = await fetchWithRetry(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                const result = await response.json();
+                const aiText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                if (aiText) {
+                    content.innerHTML = marked.parse(aiText);
+                    loader.classList.add('hidden');
+                    content.classList.remove('hidden');
+                    showNotification("AI ทำการสรุปรายงานวิเคราะห์เสร็จสิ้นแล้ว!", "success");
+                } else {
+                    throw new Error("Invalid API response format");
+                }
+            } catch (err) {
+                console.error(err);
+                loader.classList.add('hidden');
+                content.innerHTML = `
+                    <div class="text-center p-6 border border-dashed border-red-500/20 rounded-xl bg-red-950/20">
+                        <i data-lucide="alert-octagon" class="w-10 h-10 text-rose-500 mx-auto mb-2"></i>
+                        <p class="text-xs font-bold text-rose-300">เกิดข้อผิดพลาดในการเชื่อมต่อโมเดล AI ของระบบ</p>
+                        <p class="text-[10px] text-slate-500 mt-1">ขออภัยในความไม่สะดวก กรุณาลองวิเคราะห์ใหม่อีกครั้งในภายหลัง</p>
+                    </div>
+                `;
+                content.classList.remove('hidden');
+                showNotification("การวิเคราะห์ผ่าน AI ประสบปัญหาขัดข้อง", "error");
+                lucide.createIcons();
+            }
+        }
+
+        // Window Init configurations
+        window.onload = function() {
+            lucide.createIcons();
+            
+            // Generate and load beautiful default Amazon-oriented demo dataset
+            originalSalesData = generateAmazonDemoData();
+            activeSalesData = [...originalSalesData];
+            filteredSalesData = [...activeSalesData];
+
+            populateFilters(activeSalesData);
+            applyFilters();
+
+            // Setup events
+            document.getElementById('regionFilter').addEventListener('change', applyFilters);
+            document.getElementById('salesFilter').addEventListener('change', applyFilters);
+            document.getElementById('categoryFilter').addEventListener('change', applyFilters);
+            document.getElementById('searchInput').addEventListener('input', applyFilters);
+
+            document.getElementById('clearFiltersBtn').addEventListener('click', () => {
+                document.getElementById('regionFilter').value = "ALL";
+                document.getElementById('salesFilter').value = "ALL";
+                document.getElementById('categoryFilter').value = "ALL";
+                document.getElementById('searchInput').value = "";
+                applyFilters();
+                showNotification("ล้างเงื่อนไขตัวกรองสไลเซอร์ทั้งหมดเสร็จสิ้น", "info");
+            });
+
+            document.getElementById('prevPageBtn').addEventListener('click', () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    updateTable();
+                }
+            });
+            document.getElementById('nextPageBtn').addEventListener('click', () => {
+                const totalPages = Math.ceil(filteredSalesData.length / rowsPerPage) || 1;
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    updateTable();
+                }
+            });
+
+            // Handle uploading Excel and CSV
+            const fileInput = document.getElementById('fileInput');
+            fileInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                handleFileUpload(file);
+            });
+
+            // Resets demo view
+            document.getElementById('resetDemoBtn').addEventListener('click', () => {
+                activeSalesData = [...originalSalesData];
+                filteredSalesData = [...activeSalesData];
+                document.getElementById('fileTracker').classList.add('hidden');
+                document.getElementById('fileInput').value = "";
+                populateFilters(activeSalesData);
+                applyFilters();
+                showNotification("กู้คืนระบบแสดงผลฐานข้อมูลตัวอย่างเรียบร้อยแล้ว", "success");
+            });
+
+            // AI Insight Actions
+            document.getElementById('triggerAiBtn').addEventListener('click', runAiAnalysis);
+            document.getElementById('closeAiBtn').addEventListener('click', () => {
+                document.getElementById('aiInsightsPanel').classList.add('hidden');
+            });
+            document.getElementById('copyAiInsightBtn').addEventListener('click', () => {
+                const aiTextContent = document.getElementById('aiContent').innerText;
+                const tempTextArea = document.createElement("textarea");
+                tempTextArea.value = aiTextContent;
+                document.body.appendChild(tempTextArea);
+                tempTextArea.select();
+                try {
+                    document.execCommand('copy');
+                    showNotification("คัดลอกรายงานกลยุทธ์เรียบร้อย!", "success");
+                } catch (err) {
+                    showNotification("การคัดลอกล้มเหลว", "error");
+                }
+                document.body.removeChild(tempTextArea);
+            });
+        };
+    </script>
+</body>
+</html>
