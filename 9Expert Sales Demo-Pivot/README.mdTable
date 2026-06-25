@@ -1,1 +1,48 @@
+# 🛍️ 01-9Expert Sales Demo & Interactive AI Dashboard
 
+โปรเจกต์นี้เป็นการยกระดับจากการวิเคราะห์ข้อมูลยอดขายสินค้าแฟชั่นและเครื่องสำอางบน Excel (Pivot Table) ไปสู่การพัฒนา **Interactive Web Dashboard ระบบวิเคราะห์ข้อมูลอัจฉริยะ** ด้วยตัวเองทั้งหมด โดยทำงานร่วมกับโมเดล AI เพื่อช่วยวิเคราะห์กลยุทธ์ทางธุรกิจแบบอัตโนมัติ
+
+---
+
+## 🚀 จุดเด่นของโปรเจกต์ (Key Features)
+* **Cross-Platform Sales Insights:** วิเคราะห์ข้อมูลยอดขายรวมทุกแพลตฟอร์ม (TikTok, Shopee, Lazada) แยกตามหมวดหมู่สินค้าอย่างแม่นยำ
+* **Dynamic Web Dashboard:** พัฒนา Web Application ที่รองรับการอัปโหลดไฟล์ Excel (.xlsx) เพื่อคำนวณและพล็อตกราฟแสดงผล (Chart.js) ได้แบบ Real-time
+* **GenAI API Integration:** เชื่อมต่อระบบกับ **Gemini API** เพื่อวิเคราะห์ข้อมูลยอดขายและสร้าง "รายงานกลยุทธ์ธุรกิจ" (AI Insights Panel) ให้ผู้บริหารใช้งานได้ทันที
+
+---
+
+## 🛠️ Tech Stack & Tools Used
+* **Data Core:** Microsoft Excel (Pivot Table, Data Source Validation)
+* **Front-End Development:** HTML5, Tailwind CSS (Premium Dark Theme), JavaScript (ES6+)
+* **Data Processing Libraries:** SheetJS (xlsx.js) สำหรับการอ่านไฟล์ Spreadsheet บนเว็บ, Chart.js สำหรับระบบกราฟ Interactive
+* **AI Engine:** Google Gemini API (Strategic Business Insights Generation)
+
+---
+
+## 📂 รายละเอียดการพัฒนาระบบ (Deep Dive)
+
+### 1. การวิเคราะห์ต้นทุนและกำไร (Excel Core Analysis)
+* นำข้อมูลดิบมาจัดทำ Pivot Table สรุปรายได้และต้นทุนรวมแยกรายเดือน (ม.ค. - ส.ค.) เพื่อหาจุดเปลี่ยนของ Margin ในแต่ละไตรมาส
+* **Business Insight Found:** ค้นพบว่าสินค้า Hero Products หลักของทั้ง 3 แพลตฟอร์มคือกลุ่ม **"เครื่องสำอาง"** (สร้างรายได้สูงที่สุดรวม 2,052 หน่วย) ในขณะที่กลุ่ม **"น้ำหอม" และ "เสื้อผ้า"** เป็นกลุ่มที่ทำกำไรตามมาในแพลตฟอร์ม Lazada และ TikTok ตามลำดับ
+
+### 2. การสร้างสถาปัตยกรรม Web Dashboard (Front-End & Data Ops)
+* **File Tracker System:** พัฒนาระบบรองรับ Drag & Drop หรือ File Input เพื่อดึงข้อมูลเข้าสู่ JavaScript Array โดยตรงผ่าน SheetJS
+* **State Management & Filtering:** เขียนฟังก์ชัน JavaScript ในการคำนวณหาค่า KPI หลัก (Total Sales, Total Cost, Total Profit) และกรองข้อมูลแยกตามแพลตฟอร์ม (TikTok, Shopee, Lazada) ได้ทันทีโดยไม่ต้องโหลดหน้าเว็บใหม่ (No Refresh)
+* **Data Visualization:** ออกแบบกราฟแท่งและกราฟเส้นเพื่อเปรียบเทียบยอดขายในแต่ละเดือน ช่วยให้มองเห็นแนวโน้ม (Trend Analysis) ได้อย่างรวดเร็ว
+
+### 3. ระบบ AI Strategic Analysis (Advanced Feature)
+* ออกแบบปุ่ม **"Trigger AI Insight"** เพื่อรวบรวมข้อมูลสถิติที่ได้จากการคํานวณบนหน้าเว็บ ส่งต่อไปยังโปรแกรมของ **Gemini API**
+* AI จะส่งรายงานสรุปเชิงลึกที่เรนเดอร์ในรูปแบบ Markdown (ใช้ Marked.js) เพื่อแนะนำแผนการตลาด เช่นการทำ Reallocation งบโฆษณาไปยังแพลตฟอร์มที่ทำกำไรได้ดีที่สุด
+* พัฒนาระบบ **Safe Clipboard Copy** เพื่อให้ผู้ใช้งานก๊อปปี้รายงานสรุปของ AI ไปส่งต่อในแอปพลิเคชันอื่นได้อย่างสะดวก
+
+---
+
+## 💡 สิ่งที่ได้เรียนรู้และพัฒนาต่อยอด
+* ทักษะการแปลงโครงสร้างข้อมูลประเภทตาราง (Row-based) ให้กลายเป็น Object รูปแบบ JSON เพื่อนำไปส่งต่อให้ API และตัวเก็บกราฟบนเว็บไซต์
+* การออกแบบ UI/UX สไตล์ Premium Dark Slate Theme เพื่อให้ตอบโจทย์การใช้งานจริงในระดับ Enterprise Dashboard
+
+---
+
+## 📸 ภาพตัวอย่างระบบ Web Dashboard และไฟล์วิเคราะห์
+
+*(คำแนะนำสำหรับคุณ: นำรูปภาพแคปหน้าจอหน้าเว็บดาร์กโหมดสวยๆ ตอนที่กดรันรายงาน AI
